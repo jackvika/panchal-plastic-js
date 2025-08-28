@@ -1,11 +1,4 @@
-/* alttext-safe.js
-   Non-invasive, production-ready alt/title generator.
-   - No globals, no prototype changes
-   - Runs in idle time where possible
-   - Debounced MutationObserver
-   - Marks processed images with WeakSet
-   - Defensive checks to avoid exceptions
-*/
+
 (function () {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
