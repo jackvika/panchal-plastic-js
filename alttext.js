@@ -1,53 +1,41 @@
 (function() {
-  // Function to generate SEO-friendly alt text
   function generateAltText(img) {
     let src = img.getAttribute("src");
     if (!src) return;
 
     // Extract filename
     let fileName = src.substring(src.lastIndexOf("/") + 1, src.lastIndexOf("."));
-
-    // Extract folder name for context
-    let folder = src.substring(src.lastIndexOf("/", src.lastIndexOf("/") - 1) + 1, src.lastIndexOf("/"));
-    folder = folder.replace(/[-_]+/g, " ").trim();
-
-    // Skip generic or numeric filenames
     if (!fileName || /^(img|image|photo|pic|logo)[-_]?\d*$/i.test(fileName)) return;
 
-    // Clean filename
-    let cleanName = fileName
-      .replace(/[_]+/g, "-")
-      .replace(/--+/g, "-")
-      .replace(/^[\d-_]+|[\d-_]+$/g, "")
-      .trim();
+    // Extract top-level folder for category context
+    let parts = src.split("/");
+    let folder = parts.length > 2 ? parts[parts.length - 3] : "";
+    folder = folder.replace(/[-_]+/g, " ").trim();
 
-    // Generate readable words
+    // Clean filename
+    let cleanName = fileName.replace(/[_]+/g, " ").replace(/--+/g, " ").trim();
+
+    // Capitalize words including single letters
     let altText = cleanName
-      .split("-")
-      .filter(word => word.length > 1)
+      .split(/[\s-]+/)
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(" ");
 
-    // Prepend folder/category if exists
-    if (folder && folder.length > 1) {
-      folder = folder
-        .split(" ")
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
+    // Add folder/category if exists
+    if (folder) {
+      folder = folder.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
       altText = folder + " - " + altText;
     }
 
-    // Limit to 120 characters
+    // Limit to 120 chars
     altText = altText.substring(0, 120);
 
-    // Only set if meaningful
-    if (altText.length > 3) {
+    if (altText.length > 0) {
       img.setAttribute("alt", altText);
-      img.setAttribute("title", altText); // Safe for SEO/UX
+      img.setAttribute("title", altText);
     }
   }
 
-  // Process all existing images
   function processImages() {
     document.querySelectorAll("img").forEach(img => generateAltText(img));
   }
@@ -56,18 +44,13 @@
   const observer = new MutationObserver(mutations => {
     mutations.forEach(mutation => {
       mutation.addedNodes.forEach(node => {
-        if (node.tagName === "IMG") {
-          generateAltText(node);
-        } else if (node.querySelectorAll) {
-          node.querySelectorAll("img").forEach(img => generateAltText(img));
-        }
+        if (node.tagName === "IMG") generateAltText(node);
+        else if (node.querySelectorAll) node.querySelectorAll("img").forEach(img => generateAltText(img));
       });
     });
   });
-
   observer.observe(document.body, { childList: true, subtree: true });
 
-  // Run once on DOM load
   document.addEventListener("DOMContentLoaded", processImages);
 })();
 
